@@ -406,9 +406,3 @@ docker-compose ps
 ## 📄 License
 
 MIT License — Feel free to use, modify, and distribute.
-
----
-
-## 🙏 Acknowledgments
-
-Built for learning and interview preparation. Good luck with your streaming journey! 🍀
