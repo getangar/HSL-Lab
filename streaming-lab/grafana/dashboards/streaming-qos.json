@@ -1,0 +1,125 @@
+{
+  "annotations": {"list": []},
+  "description": "Streaming QoS Lab - Origin, Edge, and System Monitoring",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "gridPos": {"h": 2, "w": 24, "x": 0, "y": 0},
+      "id": 100,
+      "options": {
+        "code": {"language": "plaintext", "showLineNumbers": false},
+        "content": "# 🍎 Streaming QoS Lab Dashboard\nMonitoring Origin server, Edge CDN, and system resources.",
+        "mode": "markdown"
+      },
+      "type": "text"
+    },
+    {
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 2},
+      "id": 1,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "nginx_up{instance=\"origin\"}", "legendFormat": "Origin"}],
+      "title": "Origin Status",
+      "type": "stat",
+      "fieldConfig": {"defaults": {"mappings": [{"options": {"0": {"color": "red", "text": "DOWN"}}, "type": "value"}, {"options": {"1": {"color": "green", "text": "UP"}}, "type": "value"}], "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}}}
+    },
+    {
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 2},
+      "id": 2,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "nginx_up{instance=\"edge\"}", "legendFormat": "Edge"}],
+      "title": "Edge Status",
+      "type": "stat",
+      "fieldConfig": {"defaults": {"mappings": [{"options": {"0": {"color": "red", "text": "DOWN"}}, "type": "value"}, {"options": {"1": {"color": "green", "text": "UP"}}, "type": "value"}], "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}}}
+    },
+    {
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 2},
+      "id": 3,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "nginx_connections_active{instance=\"origin\"}", "legendFormat": "Origin"}],
+      "title": "Origin Connections",
+      "type": "stat",
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 50}, {"color": "red", "value": 100}]}}}
+    },
+    {
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 2},
+      "id": 4,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "nginx_connections_active{instance=\"edge\"}", "legendFormat": "Edge"}],
+      "title": "Edge Connections",
+      "type": "stat",
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 50}, {"color": "red", "value": 100}]}}}
+    },
+    {
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+      "id": 5,
+      "options": {"legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "targets": [
+        {"expr": "rate(nginx_http_requests_total{instance=\"origin\"}[1m])", "legendFormat": "Origin"},
+        {"expr": "rate(nginx_http_requests_total{instance=\"edge\"}[1m])", "legendFormat": "Edge"}
+      ],
+      "title": "Request Rate (Origin vs Edge)",
+      "type": "timeseries",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 20, "gradientMode": "none", "hideFrom": {"legend": false, "tooltip": false, "viz": false}, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5, "scaleDistribution": {"type": "linear"}, "showPoints": "auto", "spanNulls": false, "stacking": {"group": "A", "mode": "none"}, "thresholdsStyle": {"mode": "off"}}, "unit": "reqps"}}
+    },
+    {
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+      "id": 6,
+      "options": {"legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "targets": [
+        {"expr": "nginx_connections_active{instance=\"origin\"}", "legendFormat": "Origin Active"},
+        {"expr": "nginx_connections_active{instance=\"edge\"}", "legendFormat": "Edge Active"},
+        {"expr": "nginx_connections_waiting{instance=\"origin\"}", "legendFormat": "Origin Waiting"},
+        {"expr": "nginx_connections_waiting{instance=\"edge\"}", "legendFormat": "Edge Waiting"}
+      ],
+      "title": "Connections (Origin vs Edge)",
+      "type": "timeseries",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5}, "unit": "short"}}
+    },
+    {
+      "gridPos": {"h": 6, "w": 12, "x": 0, "y": 14},
+      "id": 7,
+      "options": {"legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "targets": [{"expr": "100 - (avg(irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "CPU Usage %"}],
+      "title": "System CPU Usage",
+      "type": "timeseries",
+      "fieldConfig": {"defaults": {"color": {"fixedColor": "blue", "mode": "fixed"}, "custom": {"drawStyle": "line", "fillOpacity": 30, "lineInterpolation": "smooth", "lineWidth": 2}, "max": 100, "min": 0, "unit": "percent", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 60}, {"color": "red", "value": 80}]}}}
+    },
+    {
+      "gridPos": {"h": 6, "w": 12, "x": 12, "y": 14},
+      "id": 8,
+      "options": {"legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "targets": [{"expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100", "legendFormat": "Memory Usage %"}],
+      "title": "System Memory Usage",
+      "type": "timeseries",
+      "fieldConfig": {"defaults": {"color": {"fixedColor": "purple", "mode": "fixed"}, "custom": {"drawStyle": "line", "fillOpacity": 30, "lineInterpolation": "smooth", "lineWidth": 2}, "max": 100, "min": 0, "unit": "percent", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 70}, {"color": "red", "value": 85}]}}}
+    },
+    {
+      "gridPos": {"h": 6, "w": 24, "x": 0, "y": 20},
+      "id": 9,
+      "options": {"legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "right"}, "tooltip": {"mode": "multi"}},
+      "targets": [
+        {"expr": "rate(node_network_receive_bytes_total{device!~\"lo|veth.*|docker.*|br-.*\"}[1m]) * 8", "legendFormat": "RX {{ device }}"},
+        {"expr": "rate(node_network_transmit_bytes_total{device!~\"lo|veth.*|docker.*|br-.*\"}[1m]) * 8", "legendFormat": "TX {{ device }}"}
+      ],
+      "title": "Network Throughput",
+      "type": "timeseries",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "line", "fillOpacity": 20, "lineInterpolation": "smooth", "lineWidth": 2}, "unit": "bps"}}
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["streaming", "qos", "nginx", "hls", "cdn"],
+  "templating": {"list": []},
+  "time": {"from": "now-15m", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Streaming QoS Overview",
+  "uid": "streaming-qos-overview",
+  "version": 1
+}

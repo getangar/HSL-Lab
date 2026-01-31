@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍎 Streaming QoS Lab - HLS Player</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1d1d1f;
+            color: #f5f5f7;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .header-subtitle {
+            text-align: center;
+            color: #86868b;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .player-section {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            min-width: 300px;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #3d3d3d;
+            color: #f5f5f7;
+            font-size: 14px;
+        }
+        
+        input[type="text"]:focus {
+            outline: 2px solid #007AFF;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #007AFF;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        
+        .btn-secondary {
+            background: #3d3d3d;
+            color: #f5f5f7;
+        }
+        
+        .btn-secondary:hover {
+            background: #4d4d4d;
+        }
+        
+        video {
+            width: 100%;
+            max-height: 500px;
+            background: #000;
+            border-radius: 8px;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .metric-card {
+            background: #3d3d3d;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .metric-label {
+            font-size: 11px;
+            color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .metric-value {
+            font-size: 22px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        
+        .metric-value.good { color: #34C759; }
+        .metric-value.warning { color: #FF9500; }
+        .metric-value.bad { color: #FF3B30; }
+        
+        .events-section {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .events-log {
+            background: #1d1d1f;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .event-item {
+            padding: 4px 0;
+            border-bottom: 1px solid #3d3d3d;
+        }
+        
+        .event-item:last-child {
+            border-bottom: none;
+        }
+        
+        .event-time {
+            color: #86868b;
+        }
+        
+        .event-type {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            margin: 0 8px;
+        }
+        
+        .event-type.info { background: #007AFF; }
+        .event-type.warning { background: #FF9500; }
+        .event-type.error { background: #FF3B30; }
+        .event-type.success { background: #34C759; }
+        
+        .quality-levels {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            align-items: center;
+        }
+        
+        .quality-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+        
+        .quality-btn.active {
+            background: #007AFF;
+            color: white;
+        }
+        
+        h2 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #f5f5f7;
+        }
+        
+        .info-box {
+            background: rgba(0, 122, 255, 0.1);
+            border: 1px solid #007AFF;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h3 {
+            color: #007AFF;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .info-box p {
+            font-size: 13px;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .info-box code {
+            background: #3d3d3d;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            word-break: break-all;
+        }
+        
+        .cache-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .cache-hit { background: #34C759; color: white; }
+        .cache-miss { background: #FF9500; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍎 Streaming QoS Lab</h1>
+        <p class="header-subtitle">HLS Player with Real-Time Metrics &amp; CDN Cache Monitoring</p>
+        
+        <div class="info-box">
+            <h3>Quick Start</h3>
+            <p>1. Start streaming on your server:</p>
+            <p><code>ffmpeg -re -f lavfi -i testsrc=size=1280x720:rate=30 -f lavfi -i sine=frequency=440 -c:v libx264 -preset ultrafast -b:v 2000k -c:a aac -f flv rtmp://YOUR_SERVER:4001/live/test</code></p>
+            <p style="margin-top: 12px;">2. Enter the HLS URL below and click "Load Stream"</p>
+        </div>
+        
+        <div class="player-section">
+            <div class="controls">
+                <input type="text" id="streamUrl" placeholder="Enter HLS URL (e.g., http://192.168.1.100:4003/hls/test.m3u8)">
+                <button class="btn-primary" onclick="loadStream()">▶️ Load Stream</button>
+                <button class="btn-secondary" onclick="stopStream()">⏹️ Stop</button>
+            </div>
+            
+            <video id="video" controls playsinline></video>
+            
+            <div class="quality-levels" id="qualityLevels">
+                <span style="color: #86868b; font-size: 12px;">Quality levels will appear when stream loads...</span>
+            </div>
+        </div>
+        
+        <div class="player-section">
+            <h2>📊 Real-Time Metrics</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Playback State</div>
+                    <div class="metric-value" id="metricState">-</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Current Bitrate</div>
+                    <div class="metric-value" id="metricBitrate">- kbps</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Buffer Length</div>
+                    <div class="metric-value" id="metricBuffer">- sec</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Dropped Frames</div>
+                    <div class="metric-value" id="metricDropped">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Latency (Est.)</div>
+                    <div class="metric-value" id="metricLatency">- sec</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Rebuffer Count</div>
+                    <div class="metric-value" id="metricRebuffer">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Bandwidth (Est.)</div>
+                    <div class="metric-value" id="metricBandwidth">- Mbps</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Cache Hits</div>
+                    <div class="metric-value good" id="metricCacheHits">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Cache Misses</div>
+                    <div class="metric-value warning" id="metricCacheMisses">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Cache Hit Ratio</div>
+                    <div class="metric-value" id="metricCacheRatio">- %</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="events-section">
+            <h2>📝 Events Log</h2>
+            <div class="events-log" id="eventsLog">
+                <div class="event-item">
+                    <span class="event-time">--:--:--</span>
+                    <span class="event-type info">INFO</span>
+                    <span>Player initialized. Enter a stream URL and click Load.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================================================
+        // Global State
+        // ==========================================================================
+        let hls = null;
+        let video = document.getElementById('video');
+        let metrics = {
+            startTime: null,
+            rebufferCount: 0,
+            rebufferDuration: 0,
+            lastBufferCheck: null,
+            isBuffering: false,
+            segmentsFetched: 0,
+            errors: 0,
+            cacheHits: 0,
+            cacheMisses: 0
+        };
+        
+        // Telemetry endpoint - uses relative URL to work from any host
+        const TELEMETRY_ENDPOINT = '/telemetry';
+        
+        // ==========================================================================
+        // Logging
+        // ==========================================================================
+        function logEvent(type, message) {
+            const log = document.getElementById('eventsLog');
+            const time = new Date().toLocaleTimeString();
+            const eventItem = document.createElement('div');
+            eventItem.className = 'event-item';
+            eventItem.innerHTML = `
+                <span class="event-time">${time}</span>
+                <span class="event-type ${type}">${type.toUpperCase()}</span>
+                <span>${message}</span>
+            `;
+            log.insertBefore(eventItem, log.firstChild);
+            
+            // Keep only last 50 events
+            while (log.children.length > 50) {
+                log.removeChild(log.lastChild);
+            }
+            
+            // Send telemetry
+            sendTelemetry('event', { type, message, timestamp: Date.now() });
+        }
+        
+        // ==========================================================================
+        // Telemetry
+        // ==========================================================================
+        function sendTelemetry(eventType, data) {
+            const payload = {
+                sessionId: sessionStorage.getItem('sessionId') || generateSessionId(),
+                eventType,
+                timestamp: Date.now(),
+                userAgent: navigator.userAgent,
+                ...data
+            };
+            
+            // Use sendBeacon for reliability
+            try {
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon(TELEMETRY_ENDPOINT, JSON.stringify(payload));
+                } else {
+                    fetch(TELEMETRY_ENDPOINT, {
+                        method: 'POST',
+                        body: JSON.stringify(payload),
+                        keepalive: true
+                    }).catch(() => {});
+                }
+            } catch (e) {
+                // Ignore telemetry errors
+            }
+        }
+        
+        function generateSessionId() {
+            const id = 'sess_' + Math.random().toString(36).substr(2, 9);
+            sessionStorage.setItem('sessionId', id);
+            return id;
+        }
+        
+        // ==========================================================================
+        // Stream Control
+        // ==========================================================================
+        function loadStream() {
+            const url = document.getElementById('streamUrl').value.trim();
+            
+            if (!url) {
+                logEvent('error', 'Please enter a stream URL');
+                return;
+            }
+            
+            stopStream();
+            
+            // Reset cache metrics
+            metrics.cacheHits = 0;
+            metrics.cacheMisses = 0;
+            
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    debug: false,
+                    enableWorker: true,
+                    lowLatencyMode: false,
+                    backBufferLength: 90,
+                    xhrSetup: function(xhr, url) {
+                        // Track cache status from response headers
+                        xhr.addEventListener('load', function() {
+                            const cacheStatus = xhr.getResponseHeader('X-Cache-Status');
+                            if (cacheStatus) {
+                                if (cacheStatus === 'HIT') {
+                                    metrics.cacheHits++;
+                                } else {
+                                    metrics.cacheMisses++;
+                                }
+                                updateCacheMetrics();
+                            }
+                        });
+                    }
+                });
+                
+                attachHlsEvents(hls);
+                
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                
+                metrics.startTime = Date.now();
+                logEvent('info', `Loading stream: ${url}`);
+                
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // Native HLS support (Safari)
+                video.src = url;
+                logEvent('info', `Loading stream (native HLS): ${url}`);
+                logEvent('warning', 'Native HLS - cache metrics not available. Use Chrome/Firefox for full metrics.');
+            } else {
+                logEvent('error', 'HLS is not supported in this browser');
+            }
+        }
+        
+        function stopStream() {
+            if (hls) {
+                hls.destroy();
+                hls = null;
+            }
+            video.src = '';
+            metrics = {
+                startTime: null,
+                rebufferCount: 0,
+                rebufferDuration: 0,
+                lastBufferCheck: null,
+                isBuffering: false,
+                segmentsFetched: 0,
+                errors: 0,
+                cacheHits: 0,
+                cacheMisses: 0
+            };
+            document.getElementById('qualityLevels').innerHTML = 
+                '<span style="color: #86868b; font-size: 12px;">Quality levels will appear when stream loads...</span>';
+            updateCacheMetrics();
+            logEvent('info', 'Stream stopped');
+        }
+        
+        // ==========================================================================
+        // HLS.js Events
+        // ==========================================================================
+        function attachHlsEvents(hls) {
+            hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+                logEvent('success', `Manifest loaded: ${data.levels.length} quality level(s)`);
+                video.play().catch(e => logEvent('warning', 'Autoplay blocked - click play'));
+                updateQualityLevels(data.levels);
+            });
+            
+            hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
+                const level = hls.levels[data.level];
+                if (level) {
+                    logEvent('info', `Quality: ${level.height}p @ ${Math.round(level.bitrate/1000)} kbps`);
+                }
+            });
+            
+            hls.on(Hls.Events.FRAG_LOADED, (event, data) => {
+                metrics.segmentsFetched++;
+            });
+            
+            hls.on(Hls.Events.ERROR, (event, data) => {
+                metrics.errors++;
+                if (data.fatal) {
+                    logEvent('error', `Fatal error: ${data.type} - ${data.details}`);
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            logEvent('warning', 'Attempting recovery from network error...');
+                            hls.startLoad();
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            logEvent('warning', 'Attempting recovery from media error...');
+                            hls.recoverMediaError();
+                            break;
+                        default:
+                            logEvent('error', 'Unrecoverable error - stopping');
+                            stopStream();
+                            break;
+                    }
+                } else {
+                    logEvent('warning', `Non-fatal error: ${data.details}`);
+                }
+            });
+            
+            hls.on(Hls.Events.BUFFER_STALLED_ERROR, () => {
+                if (!metrics.isBuffering) {
+                    metrics.isBuffering = true;
+                    metrics.rebufferCount++;
+                    metrics.lastBufferCheck = Date.now();
+                    logEvent('warning', `Rebuffering started (count: ${metrics.rebufferCount})`);
+                }
+            });
+        }
+        
+        function updateQualityLevels(levels) {
+            const container = document.getElementById('qualityLevels');
+            container.innerHTML = '<span style="color: #86868b; font-size: 12px; margin-right: 10px;">Quality:</span>';
+            
+            // Auto button
+            const autoBtn = document.createElement('button');
+            autoBtn.className = 'btn-secondary quality-btn active';
+            autoBtn.textContent = 'Auto';
+            autoBtn.onclick = () => {
+                hls.currentLevel = -1;
+                document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+                autoBtn.classList.add('active');
+                logEvent('info', 'Switched to auto quality');
+            };
+            container.appendChild(autoBtn);
+            
+            // Level buttons
+            levels.forEach((level, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-secondary quality-btn';
+                btn.textContent = `${level.height}p`;
+                btn.onclick = () => {
+                    hls.currentLevel = index;
+                    document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    logEvent('info', `Manually selected: ${level.height}p`);
+                };
+                container.appendChild(btn);
+            });
+        }
+        
+        // ==========================================================================
+        // Metrics Update
+        // ==========================================================================
+        function updateCacheMetrics() {
+            document.getElementById('metricCacheHits').textContent = metrics.cacheHits;
+            document.getElementById('metricCacheMisses').textContent = metrics.cacheMisses;
+            
+            const total = metrics.cacheHits + metrics.cacheMisses;
+            if (total > 0) {
+                const ratio = ((metrics.cacheHits / total) * 100).toFixed(1);
+                const el = document.getElementById('metricCacheRatio');
+                el.textContent = ratio + '%';
+                el.className = 'metric-value ' + (ratio >= 80 ? 'good' : (ratio >= 50 ? 'warning' : 'bad'));
+            }
+        }
+        
+        function updateMetrics() {
+            if (!video) return;
+            
+            // Playback state
+            let state = 'Stopped';
+            let stateClass = '';
+            if (video.paused) {
+                state = 'Paused';
+                stateClass = 'warning';
+            } else if (video.readyState < 3) {
+                state = 'Buffering';
+                stateClass = 'warning';
+            } else if (!video.paused && video.readyState >= 3) {
+                state = 'Playing';
+                stateClass = 'good';
+                if (metrics.isBuffering) {
+                    metrics.isBuffering = false;
+                    logEvent('success', 'Playback resumed');
+                }
+            }
+            updateMetricDisplay('metricState', state, stateClass);
+            
+            // Current bitrate
+            if (hls && hls.currentLevel >= 0 && hls.levels[hls.currentLevel]) {
+                const bitrate = Math.round(hls.levels[hls.currentLevel].bitrate / 1000);
+                updateMetricDisplay('metricBitrate', `${bitrate} kbps`, bitrate > 2000 ? 'good' : 'warning');
+            }
+            
+            // Buffer length
+            if (video.buffered.length > 0) {
+                const bufferEnd = video.buffered.end(video.buffered.length - 1);
+                const bufferLength = (bufferEnd - video.currentTime).toFixed(1);
+                const bufferClass = bufferLength > 5 ? 'good' : (bufferLength > 2 ? 'warning' : 'bad');
+                updateMetricDisplay('metricBuffer', `${bufferLength} sec`, bufferClass);
+            }
+            
+            // Dropped frames
+            if (video.getVideoPlaybackQuality) {
+                const quality = video.getVideoPlaybackQuality();
+                const dropped = quality.droppedVideoFrames;
+                const droppedClass = dropped === 0 ? 'good' : (dropped < 10 ? 'warning' : 'bad');
+                updateMetricDisplay('metricDropped', dropped, droppedClass);
+            }
+            
+            // Latency
+            if (hls && hls.latency !== undefined) {
+                updateMetricDisplay('metricLatency', `${hls.latency.toFixed(1)} sec`);
+            }
+            
+            // Rebuffer count
+            const rebufferClass = metrics.rebufferCount === 0 ? 'good' : (metrics.rebufferCount < 3 ? 'warning' : 'bad');
+            updateMetricDisplay('metricRebuffer', metrics.rebufferCount, rebufferClass);
+            
+            // Bandwidth
+            if (hls && hls.bandwidthEstimate) {
+                const bw = (hls.bandwidthEstimate / 1000000).toFixed(2);
+                updateMetricDisplay('metricBandwidth', `${bw} Mbps`, bw > 5 ? 'good' : 'warning');
+            }
+        }
+        
+        function updateMetricDisplay(id, value, className = '') {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = value;
+                el.className = 'metric-value' + (className ? ` ${className}` : '');
+            }
+        }
+        
+        // Update metrics every 500ms
+        setInterval(updateMetrics, 500);
+        
+        // Initialize
+        generateSessionId();
+        logEvent('info', 'Player ready. Session: ' + sessionStorage.getItem('sessionId'));
+        
+        // Auto-detect server IP and suggest URL
+        const serverIP = window.location.hostname;
+        if (serverIP && serverIP !== 'localhost' && serverIP !== '127.0.0.1') {
+            document.getElementById('streamUrl').value = `http://${serverIP}:4003/hls/test.m3u8`;
+        }
+    </script>
+</body>
+</html>

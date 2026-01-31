@@ -1,0 +1,101 @@
+# =============================================================================
+# Prometheus Alert Rules for Streaming QoS Lab
+# =============================================================================
+# These rules define conditions that trigger alerts.
+# In production, alerts would be sent to PagerDuty, Slack, etc.
+# In this lab, they're visible in the Prometheus UI at /alerts
+# =============================================================================
+
+groups:
+  - name: streaming_infrastructure
+    interval: 30s
+    rules:
+      # =======================================================================
+      # Service Health Alerts
+      # =======================================================================
+      - alert: NginxOriginDown
+        expr: nginx_up{instance="origin"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: origin
+        annotations:
+          summary: "Origin server is down"
+          description: "NGINX origin server has been down for more than 1 minute."
+          runbook: "Check docker-compose logs nginx-rtmp"
+
+      - alert: HighConnectionCount
+        expr: nginx_connections_active{instance="origin"} > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: origin
+        annotations:
+          summary: "High connection count on origin"
+          description: "Origin server has {{ $value }} active connections."
+
+      # =======================================================================
+      # System Resource Alerts
+      # =======================================================================
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% (current: {{ $value | printf \"%.1f\" }}%)"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 85% (current: {{ $value | printf \"%.1f\" }}%)"
+
+      - alert: HighDiskUsage
+        expr: (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High disk usage detected"
+          description: "Disk usage above 85% on {{ $labels.mountpoint }}"
+
+      # =======================================================================
+      # Network Alerts
+      # =======================================================================
+      - alert: HighNetworkTraffic
+        expr: rate(node_network_receive_bytes_total{device!~"lo|veth.*"}[5m]) * 8 > 800000000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High network traffic"
+          description: "Network receive rate above 800 Mbps on {{ $labels.device }}"
+
+  - name: streaming_quality
+    interval: 30s
+    rules:
+      # =======================================================================
+      # Request Rate Alerts
+      # =======================================================================
+      - alert: HighRequestRate
+        expr: rate(nginx_http_requests_total[1m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request rate on origin"
+          description: "Request rate is {{ $value | printf \"%.0f\" }} req/s"
+
+      - alert: LowRequestRate
+        expr: rate(nginx_http_requests_total[5m]) < 0.1 and nginx_up == 1
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "Low request rate - possible stream issue"
+          description: "Very few requests to origin - check if stream is active"

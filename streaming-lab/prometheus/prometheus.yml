@@ -1,0 +1,48 @@
+# =============================================================================
+# Prometheus Configuration for Streaming QoS Lab
+# =============================================================================
+# NOTE: setup.sh will replace HOST_IP with your server's IP address
+# =============================================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'streaming-lab'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'nginx-origin'
+    static_configs:
+      - targets: ['HOST_IP:4007']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'origin'
+
+  - job_name: 'nginx-edge'
+    static_configs:
+      - targets: ['HOST_IP:9114']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'edge'
+
+  - job_name: 'node'
+    static_configs:
+      - targets: ['HOST_IP:4008']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'host'

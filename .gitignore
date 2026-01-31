@@ -1,0 +1,121 @@
+# =============================================================================
+# Streaming QoS Lab - .gitignore
+# =============================================================================
+
+# ==== macOS ====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.AppleDouble
+.LSOverride
+Icon?
+.DocumentRevisions-V100
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# ==== Linux ====
+*~
+.nfs*
+
+# ==== Python ====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+*.cover
+*.py,cover
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+ENV/
+env/
+
+# ==== Bash/Shell ====
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# ==== IDE/Editors ====
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+.project
+.settings/
+.classpath
+*.iml
+
+# ==== Docker ====
+# Don't ignore docker-compose.yml or Dockerfile - they're needed!
+# But ignore runtime data
+*.pid
+docker-compose.override.yml
+
+# ==== Project Specific ====
+# HLS segments (generated at runtime)
+*.ts
+*.m3u8
+
+# Prometheus data (persisted in Docker volume)
+prometheus-data/
+
+# Grafana data (persisted in Docker volume)
+grafana-data/
+
+# Local config overrides (if any)
+*.local
+*.local.yml
+*.local.yaml
+
+# Generated archives
+*.tar.gz
+*.zip
+
+# Test outputs
+test-output/
+tmp/
+
+# Secrets (if any)
+.env
+.env.*
+secrets/
+*.key
+*.pem
+*.crt

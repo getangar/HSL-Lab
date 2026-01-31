@@ -1,0 +1,19 @@
+# =============================================================================
+# Grafana Datasource Provisioning
+# =============================================================================
+# NOTE: Uses host IP for Prometheus since Docker networking has issues.
+# The setup.sh script will update the IP address.
+# =============================================================================
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://HOST_IP:4005
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: "15s"
+      httpMethod: "POST"
